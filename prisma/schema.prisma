@@ -1,0 +1,379 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Tenant ───────────────────────────────────────────────
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  phone     String?
+  email     String?
+  address   String?
+  city      String?
+  state     String?
+  zip       String?
+  logoUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users          User[]
+  customers      Customer[]
+  jobs           Job[]
+  invoices       Invoice[]
+  inventoryItems InventoryItem[]
+  serviceTypes   ServiceType[]
+  schedules      Schedule[]
+}
+
+// ─── User / Employee ──────────────────────────────────────
+enum UserRole {
+  OWNER
+  ADMIN
+  DISPATCHER
+  TECH
+  APPRENTICE
+  OFFICE
+}
+
+model User {
+  id             String    @id @default(cuid())
+  tenantId       String
+  tenant         Tenant    @relation(fields: [tenantId], references: [id])
+  name           String
+  email          String    @unique
+  password       String
+  role           UserRole  @default(TECH)
+  phone          String?
+  avatarUrl      String?
+  title          String?
+  certifications String[]
+  isActive       Boolean   @default(true)
+  hireDate       DateTime?
+  hourlyRate     Float?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  assignedJobs  Job[]         @relation("AssignedTech")
+  createdJobs   Job[]         @relation("CreatedBy")
+  timeEntries   TimeEntry[]
+  schedules     Schedule[]
+  sessions      Session[]
+  accounts      Account[]
+}
+
+// ─── NextAuth ─────────────────────────────────────────────
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+// ─── Customer ─────────────────────────────────────────────
+model Customer {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  firstName String
+  lastName  String
+  email     String?
+  phone     String
+  address   String?
+  city      String?
+  state     String?
+  zip       String?
+  notes     String?
+  tags      String[]
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobs     Job[]
+  invoices Invoice[]
+}
+
+// ─── Service Type ─────────────────────────────────────────
+model ServiceType {
+  id          String  @id @default(cuid())
+  tenantId    String
+  tenant      Tenant  @relation(fields: [tenantId], references: [id])
+  name        String
+  description String?
+  defaultRate Float?
+  duration    Int?    // minutes
+  color       String  @default("#3b82f6")
+
+  jobs Job[]
+}
+
+// ─── Job ──────────────────────────────────────────────────
+enum JobStatus {
+  NEW
+  SCHEDULED
+  DISPATCHED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  INVOICED
+  CANCELLED
+}
+
+enum JobPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model Job {
+  id             String      @id @default(cuid())
+  jobNumber      String      @unique
+  tenantId       String
+  tenant         Tenant      @relation(fields: [tenantId], references: [id])
+  customerId     String
+  customer       Customer    @relation(fields: [customerId], references: [id])
+  serviceTypeId  String?
+  serviceType    ServiceType? @relation(fields: [serviceTypeId], references: [id])
+  assignedToId   String?
+  assignedTo     User?        @relation("AssignedTech", fields: [assignedToId], references: [id])
+  createdById    String?
+  createdBy      User?        @relation("CreatedBy", fields: [createdById], references: [id])
+
+  title          String
+  description    String?
+  status         JobStatus   @default(NEW)
+  priority       JobPriority @default(NORMAL)
+
+  scheduledStart DateTime?
+  scheduledEnd   DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  address        String?
+  city           String?
+  state          String?
+  zip            String?
+
+  techNotes      String?
+  internalNotes  String?
+  tags           String[]
+
+  laborHours     Float?
+  laborRate      Float?
+
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  lineItems  JobLineItem[]
+  invoices   Invoice[]
+  timeEntries TimeEntry[]
+  inventoryUsage InventoryTransaction[]
+}
+
+// ─── Job Line Item ────────────────────────────────────────
+model JobLineItem {
+  id          String  @id @default(cuid())
+  jobId       String
+  job         Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float   @default(1)
+  unitPrice   Float
+  taxable     Boolean @default(true)
+  sortOrder   Int     @default(0)
+}
+
+// ─── Invoice ──────────────────────────────────────────────
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  PARTIAL
+  OVERDUE
+  VOID
+}
+
+model Invoice {
+  id           String        @id @default(cuid())
+  invoiceNumber String       @unique
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  customerId   String
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  jobId        String?
+  job          Job?          @relation(fields: [jobId], references: [id])
+
+  status       InvoiceStatus @default(DRAFT)
+  issueDate    DateTime      @default(now())
+  dueDate      DateTime?
+  paidDate     DateTime?
+
+  subtotal     Float         @default(0)
+  taxRate      Float         @default(0.08)
+  taxAmount    Float         @default(0)
+  total        Float         @default(0)
+  amountPaid   Float         @default(0)
+  balance      Float         @default(0)
+
+  notes        String?
+  terms        String?
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  lineItems    InvoiceLineItem[]
+  payments     Payment[]
+}
+
+model InvoiceLineItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float   @default(1)
+  unitPrice   Float
+  total       Float
+  taxable     Boolean @default(true)
+  sortOrder   Int     @default(0)
+}
+
+// ─── Payment ──────────────────────────────────────────────
+enum PaymentMethod {
+  CASH
+  CHECK
+  CARD
+  ACH
+  OTHER
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  invoiceId String
+  invoice   Invoice       @relation(fields: [invoiceId], references: [id])
+  amount    Float
+  method    PaymentMethod @default(CARD)
+  reference String?
+  paidAt    DateTime      @default(now())
+  notes     String?
+}
+
+// ─── Inventory ────────────────────────────────────────────
+enum InventoryCategory {
+  PARTS
+  MATERIALS
+  TOOLS
+  SUPPLIES
+  EQUIPMENT
+}
+
+model InventoryItem {
+  id           String            @id @default(cuid())
+  tenantId     String
+  tenant       Tenant            @relation(fields: [tenantId], references: [id])
+  sku          String?
+  name         String
+  description  String?
+  category     InventoryCategory @default(PARTS)
+  unit         String            @default("each")
+  costPrice    Float             @default(0)
+  sellPrice    Float             @default(0)
+  quantityOnHand Float           @default(0)
+  reorderPoint Float             @default(5)
+  reorderQty   Float             @default(10)
+  location     String?
+  supplier     String?
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  transactions InventoryTransaction[]
+}
+
+enum TransactionType {
+  RECEIVED
+  USED
+  ADJUSTED
+  RETURNED
+  TRANSFERRED
+}
+
+model InventoryTransaction {
+  id          String          @id @default(cuid())
+  itemId      String
+  item        InventoryItem   @relation(fields: [itemId], references: [id])
+  jobId       String?
+  job         Job?            @relation(fields: [jobId], references: [id])
+  type        TransactionType
+  quantity    Float
+  unitCost    Float?
+  notes       String?
+  createdAt   DateTime        @default(now())
+}
+
+// ─── Time Entry ───────────────────────────────────────────
+enum TimeEntryStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model TimeEntry {
+  id         String          @id @default(cuid())
+  userId     String
+  user       User            @relation(fields: [userId], references: [id])
+  jobId      String?
+  job        Job?            @relation(fields: [jobId], references: [id])
+  clockIn    DateTime
+  clockOut   DateTime?
+  breakMins  Int             @default(0)
+  hours      Float?
+  notes      String?
+  status     TimeEntryStatus @default(PENDING)
+  approvedBy String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+}
+
+// ─── Schedule ─────────────────────────────────────────────
+model Schedule {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+}
