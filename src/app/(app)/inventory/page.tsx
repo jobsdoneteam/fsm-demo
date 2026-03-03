@@ -7,10 +7,7 @@ export default async function InventoryPage() {
   const session = await auth()
   if (!session) redirect('/login')
   const tenantId = (session.user as any).tenantId
-  const items = await prisma.inventoryItem.findMany({
-    where: { tenantId },
-    orderBy: { category: 'asc' },
-  })
+  const items = await prisma.inventoryItem.findMany({ where: { tenantId }, orderBy: { category: 'asc' } })
   const lowStock = items.filter(i => i.quantityOnHand <= i.reorderPoint)
   const totalValue = items.reduce((s, i) => s + i.costPrice * i.quantityOnHand, 0)
   return (
@@ -37,11 +34,7 @@ export default async function InventoryPage() {
                 <td className="text-gray-500">{item.reorderPoint}</td>
                 <td className="text-gray-600">{formatCurrency(item.costPrice)}</td>
                 <td className="text-gray-600">{item.sellPrice > 0 ? formatCurrency(item.sellPrice) : '—'}</td>
-                <td>
-                  {item.quantityOnHand <= item.reorderPoint
-                    ? <span className="badge bg-red-100 text-red-700">Low Stock</span>
-                    : <span className="badge bg-green-100 text-green-700">In Stock</span>}
-                </td>
+                <td>{item.quantityOnHand <= item.reorderPoint ? <span className="badge bg-red-100 text-red-700">Low Stock</span> : <span className="badge bg-green-100 text-green-700">In Stock</span>}</td>
               </tr>
             ))}
           </tbody>
