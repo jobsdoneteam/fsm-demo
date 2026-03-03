@@ -25,13 +25,8 @@ export default async function EmployeesPage() {
               <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm flex-shrink-0">
                 {emp.name.split(' ').map(n => n[0]).join('')}
               </div>
-              <div>
-                <p className="font-semibold text-gray-900">{emp.name}</p>
-                <p className="text-xs text-gray-500">{emp.title}</p>
-              </div>
-              <span className={`ml-auto badge text-xs ${emp.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                {emp.isActive ? 'Active' : 'Inactive'}
-              </span>
+              <div><p className="font-semibold text-gray-900">{emp.name}</p><p className="text-xs text-gray-500">{emp.title}</p></div>
+              <span className={`ml-auto badge text-xs ${emp.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{emp.isActive ? 'Active' : 'Inactive'}</span>
             </div>
             <div className="space-y-1 text-xs text-gray-500">
               <p><span className="font-medium text-gray-700">Role:</span> {ROLE_LABELS[emp.role]}</p>
@@ -41,14 +36,10 @@ export default async function EmployeesPage() {
               {emp.hourlyRate ? <p><span className="font-medium text-gray-700">Rate:</span> ${emp.hourlyRate}/hr</p> : null}
             </div>
             {emp.certifications.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1">
-                {emp.certifications.map(c => (
-                  <span key={c} className="badge bg-blue-50 text-blue-600 text-xs">{c}</span>
-                ))}
-              </div>
+              <div className="mt-3 flex flex-wrap gap-1">{emp.certifications.map(c => <span key={c} className="badge bg-blue-50 text-blue-600 text-xs">{c}</span>)}</div>
             )}
             <div className="mt-3 flex gap-4 text-xs text-gray-500 border-t border-gray-100 pt-3">
-              <span><span className="font-semibold text-gray-700">{emp._count.assignedJobs}</span> jobs assigned</span>
+              <span><span className="font-semibold text-gray-700">{emp._count.assignedJobs}</span> jobs</span>
               <span><span className="font-semibold text-gray-700">{emp._count.timeEntries}</span> time entries</span>
             </div>
           </div>
