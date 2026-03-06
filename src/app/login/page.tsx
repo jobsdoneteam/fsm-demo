@@ -4,9 +4,9 @@ import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 const DEMO_USERS = [
-  { label: 'Owner / Admin', email: 'owner@fieldflowdemo.com', password: 'demo1234', color: 'bg-blue-600', desc: 'Full access — reports, settings, all modules' },
-  { label: 'Dispatcher', email: 'dispatch@fieldflowdemo.com', password: 'demo1234', color: 'bg-green-600', desc: 'Dispatch board, job assignment, scheduling' },
-  { label: 'Field Tech', email: 'tech1@fieldflowdemo.com', password: 'demo1234', color: 'bg-orange-500', desc: 'My jobs, time cards, job details' },
+  { label: 'Owner / Admin', email: 'owner@fieldflowordemo.com', password: 'demo1234', color: 'bg-blue-600', desc: 'Full access — reports, settings, all modules' },
+  { label: 'Dispatcher', email: 'dispatch@fieldflowordemo.com', password: 'demo1234', color: 'bg-green-600', desc: 'Dispatch board, job assignment, scheduling' },
+  { label: 'Field Tech', email: 'tech1@fieldflowordemo.com', password: 'demo1234', color: 'bg-orange-500', desc: 'My jobs, time cards, job details' },
 ]
 
 export default function LoginPage() {
@@ -46,7 +46,15 @@ export default function LoginPage() {
         </div>
         <div className="space-y-4">
           <p className="text-sm text-blue-300 font-semibold uppercase tracking-wider">What you can explore</p>
-          {['Full job lifecycle — new to invoiced', 'Dispatch board with tech assignment', 'Invoicing & payment tracking', 'Inventory with low-stock alerts', 'Time cards & weekly payroll summary', 'Revenue & utilization reports'].map(f => (
+          {[
+            'Full job lifecycle — new to invoiced',
+            'Dispatch board with tech assignment',
+            'Invoicing & payment tracking',
+            'Inventory with low-stock alerts',
+            'Time cards & weekly payroll summary',
+            'Revenue & utilization reports',
+            'Customer booking portal — embed on any website',
+          ].map(f => (
             <div key={f} className="flex items-center gap-2 text-sm text-blue-100">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20,6 9,17 4,12"/></svg>
               {f}
@@ -55,76 +63,99 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right — login */}
+      {/* Right — login form */}
       <div className="flex-1 flex flex-col justify-center px-6 py-12 lg:px-16">
-        <div className="max-w-md w-full mx-auto">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
+        <div className="mx-auto w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M8 10h10M8 16h16M8 22h12" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg>
             </div>
             <span className="text-lg font-bold text-gray-900">FieldFlow</span>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Sign in to your account</h2>
-          <p className="text-gray-500 text-sm mb-8">This is a live demo — use one-click login below or enter credentials manually.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">Select your role</h2>
+          <p className="text-gray-500 text-sm mb-8">Explore FieldFlow from any perspective</p>
 
-          {/* One-click demo logins */}
-          <div className="mb-8">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">One-click demo access</p>
+          {/* Demo user quick-login cards */}
+          <div className="mb-6">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Quick demo login</p>
             <div className="space-y-2">
               {DEMO_USERS.map(u => (
                 <button
                   key={u.email}
-                  onClick={() => handleLogin(undefined, u)}
+                  onClick={() => handleLogin(undefined, { email: u.email, password: u.password })}
                   disabled={loading}
-                  className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors text-left group"
+                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all text-left disabled:opacity-50"
                 >
-                  <div className={`w-9 h-9 ${u.color} rounded-lg flex items-center justify-center text-white text-sm font-bold flex-shrink-0`}>
-                    {u.label.charAt(0)}
+                  <div className={`w-8 h-8 ${u.color} rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0`}>
+                    {u.label[0]}
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">{u.label}</p>
-                    <p className="text-xs text-gray-500">{u.desc}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-800">{u.label}</p>
+                    <p className="text-xs text-gray-400 truncate">{u.desc}</p>
                   </div>
-                  <svg className="ml-auto text-gray-300 group-hover:text-blue-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9,18 15,12 9,6"/></svg>
+                  <svg className="ml-auto shrink-0 text-gray-300" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                 </button>
               ))}
+
+              {/* Customer portal card — no auth required */}
+              <button
+                onClick={() => router.push('/customer-portal')}
+                disabled={loading}
+                className="w-full flex items-center gap-3 p-3 rounded-lg border border-teal-200 bg-teal-50 hover:bg-teal-100 hover:border-teal-300 transition-all text-left disabled:opacity-50"
+              >
+                <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  C
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-800">Customer</p>
+                  <p className="text-xs text-teal-600 truncate">See FieldFlow from your customer&apos;s perspective</p>
+                </div>
+                <svg className="ml-auto shrink-0 text-teal-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
             </div>
           </div>
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-            <div className="relative flex justify-center text-xs text-gray-400 bg-gray-50 px-3">or sign in manually</div>
+            <div className="relative flex justify-center text-xs text-gray-400 bg-gray-50 px-2">or sign in manually</div>
           </div>
 
+          {/* Manual login form */}
           <form onSubmit={handleLogin} className="space-y-4">
-            {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg">{error}</div>}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="you@example.com"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input
-                type="password" value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
+            {error && <p className="text-sm text-red-600">{error}</p>}
             <button
-              type="submit" disabled={loading}
-              className="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
 
-          <p className="text-xs text-gray-400 text-center mt-6">
-            Demo credentials: any @fieldflowdemo.com / demo1234
+          <p className="mt-6 text-center text-xs text-gray-400">
+            Demo environment — all data is synthetic and resets periodically.
           </p>
         </div>
       </div>
