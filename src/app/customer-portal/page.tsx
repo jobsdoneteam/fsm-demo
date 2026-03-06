@@ -116,8 +116,16 @@ export default function CustomerPortalPage() {
       </header>
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-800 to-blue-600 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-20 md:py-28 grid md:grid-cols-2 gap-12 items-center">
+      <section className="relative bg-gradient-to-br from-blue-800 to-blue-600 text-white">
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/85 to-blue-700/80" />
+          <img
+            src="/plumber.jpg"
+            alt="Professional Plumber"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </div>
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-20 md:py-28 grid md:grid-cols-2 gap-12 items-center">
           <div>
             <div className="inline-flex items-center gap-2 bg-blue-500/30 text-blue-100 text-xs font-semibold px-3 py-1 rounded-full mb-6">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse inline-block"></span>
@@ -159,6 +167,7 @@ export default function CustomerPortalPage() {
               </div>
             ))}
           </div>
+        </div>
         </div>
       </section>
 
