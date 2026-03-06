@@ -3,11 +3,10 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
-const DEMO_USERS = [
-  { label: 'Owner / Admin', email: 'owner@fieldflowordemo.com', password: 'demo1234', color: 'bg-blue-600', desc: 'Full access — reports, settings, all modules' },
-  { label: 'Dispatcher', email: 'dispatch@fieldflowordemo.com', password: 'demo1234', color: 'bg-green-600', desc: 'Dispatch board, job assignment, scheduling' },
-  { label: 'Field Tech', email: 'tech1@fieldflowordemo.com', password: 'demo1234', color: 'bg-orange-500', desc: 'My jobs, time cards, job details' },
-]
+const DEMO_CREDENTIALS = {
+  email: 'owner@fieldflowdemo.com',
+  password: 'demo1234',
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -74,47 +73,60 @@ export default function LoginPage() {
             <span className="text-lg font-bold text-gray-900">FieldFlow</span>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">Select your role</h2>
-          <p className="text-gray-500 text-sm mb-8">Explore FieldFlow from any perspective</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">Explore the Demo</h2>
+          <p className="text-gray-500 text-sm mb-6">Choose your perspective</p>
 
-          {/* Demo user quick-login cards */}
-          <div className="mb-6">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Quick demo login</p>
-            <div className="space-y-2">
-              {DEMO_USERS.map(u => (
-                <button
-                  key={u.email}
-                  onClick={() => handleLogin(undefined, { email: u.email, password: u.password })}
-                  disabled={loading}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all text-left disabled:opacity-50"
-                >
-                  <div className={`w-8 h-8 ${u.color} rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0`}>
-                    {u.label[0]}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-800">{u.label}</p>
-                    <p className="text-xs text-gray-400 truncate">{u.desc}</p>
-                  </div>
-                  <svg className="ml-auto shrink-0 text-gray-300" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
-                </button>
-              ))}
-
-              {/* Customer portal card — no auth required */}
-              <button
-                onClick={() => router.push('/customer-portal')}
-                disabled={loading}
-                className="w-full flex items-center gap-3 p-3 rounded-lg border border-teal-200 bg-teal-50 hover:bg-teal-100 hover:border-teal-300 transition-all text-left disabled:opacity-50"
-              >
-                <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
-                  C
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-800">Customer</p>
-                  <p className="text-xs text-teal-600 truncate">See FieldFlow from your customer&apos;s perspective</p>
-                </div>
-                <svg className="ml-auto shrink-0 text-teal-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
-              </button>
+          {/* Demo info box */}
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-sm font-semibold text-blue-900 mb-1">Demo Company: Apex Plumbing</p>
+                <p className="text-xs text-blue-700">
+                  Business login: <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono text-blue-900">{DEMO_CREDENTIALS.email}</code>
+                </p>
+                <p className="text-xs text-blue-700 mt-1">
+                  Password: <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono text-blue-900">{DEMO_CREDENTIALS.password}</code>
+                </p>
+              </div>
             </div>
+          </div>
+
+          {/* Role selection cards */}
+          <div className="space-y-3 mb-6">
+            {/* Business login */}
+            <button
+              onClick={() => handleLogin(undefined, DEMO_CREDENTIALS)}
+              disabled={loading}
+              className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-blue-600 bg-blue-600 hover:bg-blue-700 transition-all text-left disabled:opacity-50 group"
+            >
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 text-lg font-bold shrink-0">
+                B
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-base font-bold text-white">Business Owner</p>
+                <p className="text-sm text-blue-100">Dashboard, jobs, customers, invoicing, inventory & more</p>
+              </div>
+              <svg className="shrink-0 text-white group-hover:translate-x-1 transition-transform" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+
+            {/* Customer portal */}
+            <button
+              onClick={() => router.push('/customer-portal')}
+              disabled={loading}
+              className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all text-left disabled:opacity-50 group"
+            >
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 text-lg font-bold shrink-0">
+                C
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-base font-bold text-gray-900">Customer Portal</p>
+                <p className="text-sm text-gray-500">See how customers book services online</p>
+              </div>
+              <svg className="shrink-0 text-gray-400 group-hover:translate-x-1 transition-transform" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
           </div>
 
           <div className="relative mb-6">

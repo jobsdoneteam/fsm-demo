@@ -74,3 +74,43 @@
 }
 .kpi-change.up { @apply text-green-600; }
 .kpi-change.down { @apply text-red-600; }
+
+/* Toast animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(calc(100% + 1rem));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes hide {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(100% + 1rem));
+  }
+}
+
+@keyframes swipeOut {
+  from {
+    transform: translateX(var(--radix-toast-swipe-end-x));
+  }
+  to {
+    transform: translateX(calc(100% + 1rem));
+  }
+}
+
+[data-state="open"] {
+  animation: slideIn 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-state="closed"] {
+  animation: hide 100ms ease-in;
+}
+
+[data-swipe="end"] {
+  animation: swipeOut 100ms ease-out;
+}

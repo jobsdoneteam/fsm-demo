@@ -47,6 +47,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string
         ;(session.user as any).role = token.role
         ;(session.user as any).tenantId = token.tenantId
+        
+        if (token.tenantId) {
+          const tenant = await prisma.tenant.findUnique({
+            where: { id: token.tenantId as string },
+            select: { name: true, slug: true },
+          })
+          if (tenant) {
+            ;(session.user as any).tenantName = tenant.name
+          }
+        }
       }
       return session
     },

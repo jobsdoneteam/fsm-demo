@@ -34,7 +34,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-900">FieldFlow</p>
+              <p className="text-sm font-bold text-gray-900">{(session?.user as any)?.tenantName || 'FieldFlow'}</p>
               <p className="text-xs text-gray-400">Demo</p>
             </div>
           </div>
@@ -46,6 +46,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
+              scroll={false}
+              prefetch={false}
               className={cn(
                 'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 pathname.startsWith(item.href)

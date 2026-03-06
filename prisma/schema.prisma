@@ -100,11 +100,18 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// ─── Customer Status ───────────────────────────────────────
+enum CustomerStatus {
+  INQUIRY
+  ACTIVE
+  INACTIVE
+}
+
 // ─── Customer ─────────────────────────────────────────────
 model Customer {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  tenant    Tenant         @relation(fields: [tenantId], references: [id])
   firstName String
   lastName  String
   email     String?
@@ -115,9 +122,10 @@ model Customer {
   zip       String?
   notes     String?
   tags      String[]
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status    CustomerStatus @default(ACTIVE)
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   jobs     Job[]
   invoices Invoice[]

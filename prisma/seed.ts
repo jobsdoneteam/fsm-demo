@@ -21,6 +21,21 @@ async function main() {
     },
   })
 
+  const apexTenant = await prisma.tenant.upsert({
+    where: { slug: 'apex-plumbing' },
+    update: {},
+    create: {
+      name: 'Apex Plumbing',
+      slug: 'apex-plumbing',
+      email: 'info@apexplumbing.com',
+      phone: '(412) 555-0198',
+      address: '789 Industry Blvd',
+      city: 'Pittsburgh',
+      state: 'PA',
+      zip: '15201',
+    },
+  })
+
   const owner = await prisma.user.upsert({
     where: { email: 'owner@fieldflowdemo.com' },
     update: {},

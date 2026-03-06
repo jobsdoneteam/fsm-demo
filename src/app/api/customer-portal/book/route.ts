@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Resend } from 'resend'
+import { broadcastBookingEvent } from '@/lib/eventEmitter'
 
 const DEMO_TENANT_SLUG = 'apex-plumbing'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+
+function splitName(fullName: string): { firstName: string; lastName: string } {
+  const parts = fullName.trim().split(/\s+/)
+  const firstName = parts[0] || ''
+  const lastName = parts.slice(1).join(' ') || ''
+  return { firstName, lastName }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,6 +28,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Demo tenant not found. Has the DB been seeded?' }, { status: 500 })
     }
 
+    const { firstName, lastName } = splitName(name)
+
     let customer = await prisma.customer.findFirst({
       where: { tenantId: tenant.id, email },
     })
@@ -27,28 +37,36 @@ export async function POST(req: NextRequest) {
     if (customer) {
       customer = await prisma.customer.update({
         where: { id: customer.id },
-        data: { name, phone: phone || customer.phone },
+        data: { firstName, lastName, phone: phone || customer.phone },
       })
     } else {
       customer = await prisma.customer.create({
-        data: { tenantId: tenant.id, name, email, phone: phone || null, isActive: true },
+        data: { 
+          tenant: { connect: { id: tenant.id } }, 
+          firstName, 
+          lastName, 
+          email, 
+          phone: phone || null, 
+          status: 'INQUIRY',
+          isActive: true 
+        },
       })
     }
 
     const jobCount = await prisma.job.count({ where: { tenantId: tenant.id } })
     const jobNumber = `WEB-${String(jobCount + 1).padStart(4, '0')}`
 
-    let scheduledAt: Date | undefined
+    let scheduledStart: Date | undefined
     if (preferredDate) {
-      scheduledAt = new Date(preferredDate)
-      if (isNaN(scheduledAt.getTime())) scheduledAt = undefined
+      scheduledStart = new Date(preferredDate)
+      if (isNaN(scheduledStart.getTime())) scheduledStart = undefined
     }
 
     const job = await prisma.job.create({
       data: {
-        tenantId: tenant.id,
+        tenant: { connect: { id: tenant.id } },
         jobNumber,
-        customerId: customer.id,
+        customer: { connect: { id: customer.id } },
         title: serviceType,
         description: [
           description,
@@ -57,7 +75,7 @@ export async function POST(req: NextRequest) {
         ].filter(Boolean).join('\n'),
         status: 'NEW',
         priority: serviceType.toLowerCase().includes('emergency') ? 'URGENT' : 'NORMAL',
-        scheduledAt: scheduledAt ?? null,
+        scheduledStart: scheduledStart ?? null,
         tags: ['web-booking'],
       },
     })
@@ -97,6 +115,28 @@ export async function POST(req: NextRequest) {
         `,
       })
     }
+
+    broadcastBookingEvent({
+      type: 'NEW_BOOKING',
+      data: {
+        job: {
+          id: job.id,
+          jobNumber: job.jobNumber,
+          title: job.title,
+          status: job.status,
+          priority: job.priority,
+          scheduledStart: job.scheduledStart,
+          createdAt: job.createdAt,
+        },
+        customer: {
+          id: customer.id,
+          firstName: customer.firstName,
+          lastName: customer.lastName,
+          email: customer.email,
+          phone: customer.phone,
+        },
+      },
+    })
 
     return NextResponse.json({ success: true, jobNumber: job.jobNumber, customerId: customer.id, jobId: job.id })
   } catch (err: unknown) {
