@@ -32,7 +32,7 @@ const SERVICES = [
       </svg>
     ),
     title: 'Leak Detection',
-    desc: 'Hidden leaks found without tearing up walls. Electronic detection locates the source precisely before any work begins.',
+    desc: 'Hidden leaks found without tearing up walls. Electronic detection locates source precisely before any work begins.',
   },
   {
     icon: (
@@ -61,7 +61,7 @@ const SERVICES = [
         <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
       </svg>
     ),
-    title: '🚨 24/7 Emergency Service',
+    title: '24/7 Emergency Service',
     desc: 'Flooding, burst pipes, sewage backups — we answer every call. Trucks roll within hour, day or night.',
     isEmergency: true,
   },
@@ -69,7 +69,7 @@ const SERVICES = [
 
 const REVIEWS = [
   { name: 'Maria T.', stars: 5, text: 'Showed up within 45 minutes of my call at 11pm. Fixed a burst pipe under the sink and cleaned up everything. Will never call anyone else.' },
-  { name: 'Dave K.', stars: 5, text: 'Replaced our water heater same day. The tech walked me through everything and the price was exactly what they quoted — no surprises.' },
+  { name: 'Dave K.', stars: 5, text: 'Replaced our water heater same day. The tech walked me through everything and price was exactly what they quoted — no surprises.' },
   { name: 'Sandra L.', stars: 5, text: 'Our drain had been slow for months. They cleared it in under an hour and explained what caused it. Very professional.' },
 ]
 
@@ -90,7 +90,6 @@ export default function CustomerPortalPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans">
-
       {/* Nav */}
       <header className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -118,11 +117,10 @@ export default function CustomerPortalPage() {
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-blue-800 to-blue-600 text-white">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/85 to-blue-700/80" />
           <img
             src="/plumber.jpg"
             alt="Professional Plumber"
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover opacity-35"
           />
         </div>
         <div className="relative z-10 max-w-6xl mx-auto px-6 py-20 md:py-28 grid md:grid-cols-2 gap-12 items-center">
@@ -167,7 +165,6 @@ export default function CustomerPortalPage() {
               </div>
             ))}
           </div>
-        </div>
         </div>
       </section>
 
@@ -276,7 +273,7 @@ export default function CustomerPortalPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-blue-50 rounded-xl p-6 text-center col-span-2">
               <div className="text-4xl font-bold text-blue-700 mb-1">18 Years</div>
-              <div className="text-gray-500 text-sm">Serving the Pittsburgh area</div>
+              <div className="text-gray-500 text-sm">Serving Pittsburgh area</div>
             </div>
             <div className="bg-gray-50 rounded-xl p-6 text-center">
               <div className="text-3xl font-bold text-gray-900 mb-1">3,200+</div>
