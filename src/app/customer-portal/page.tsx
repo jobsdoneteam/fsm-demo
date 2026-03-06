@@ -61,8 +61,9 @@ const SERVICES = [
         <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
       </svg>
     ),
-    title: '24/7 Emergency Service',
-    desc: 'Flooding, burst pipes, sewage backups — we answer every call. Trucks roll within the hour, day or night.',
+    title: '🚨 24/7 Emergency Service',
+    desc: 'Flooding, burst pipes, sewage backups — we answer every call. Trucks roll within hour, day or night.',
+    isEmergency: true,
   },
 ]
 
@@ -162,11 +163,38 @@ export default function CustomerPortalPage() {
       </section>
 
       {/* Emergency bar */}
-      <div className="bg-red-600 text-white text-center py-3 px-6 text-sm font-semibold">
-        Plumbing emergency? We&apos;re available 24/7 — call{' '}
-        <a href="tel:+14125550198" className="underline underline-offset-2">(412) 555-0198</a>{' '}
-        or{' '}
-        <button onClick={() => setBookingOpen(true)} className="underline underline-offset-2">book online now</button>.
+      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white text-center py-5 px-6 shadow-lg border-b-4 border-red-800">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 max-w-4xl mx-auto">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+            </div>
+            <div className="text-left">
+              <p className="font-bold text-lg leading-tight">🚨 PLUMBING EMERGENCY?</p>
+              <p className="text-red-100 text-sm">We&apos;re available 24/7 — trucks roll within 1 hour</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <a
+              href="tel:+14125550198"
+              className="bg-white text-red-700 font-bold px-6 py-3 rounded-lg hover:bg-red-50 transition flex items-center gap-2 shadow-md"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.28h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.08 6.08l1.04-1.04a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              Call Now
+            </a>
+            <button
+              onClick={() => setBookingOpen(true)}
+              className="bg-red-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-red-400 transition shadow-md border-2 border-white/30"
+            >
+              Book Emergency
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Services */}
@@ -178,10 +206,24 @@ export default function CustomerPortalPage() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {SERVICES.map(s => (
-              <div key={s.title} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition">
-                <div className="text-blue-600 mb-3">{s.icon}</div>
-                <h3 className="font-bold text-gray-900 mb-2">{s.title}</h3>
+              <div key={s.title} className={`${s.isEmergency ? 'bg-red-50 border-red-200 ring-2 ring-red-200' : 'bg-white border-gray-100'} rounded-xl p-6 shadow-sm border hover:shadow-md transition ${s.isEmergency ? 'hover:ring-red-300' : ''}`}>
+                <div className={`${s.isEmergency ? 'text-red-600' : 'text-blue-600'} mb-3`}>{s.icon}</div>
+                <h3 className={`font-bold mb-2 ${s.isEmergency ? 'text-red-800' : 'text-gray-900'}`}>{s.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
+                {s.isEmergency && (
+                  <div className="mt-4 pt-4 border-t border-red-200">
+                    <button
+                      onClick={() => setBookingOpen(true)}
+                      className="w-full bg-red-600 text-white font-bold py-2.5 rounded-lg hover:bg-red-700 transition text-sm flex items-center justify-center gap-2"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                      </svg>
+                      Book Emergency Now
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
