@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatDateTime, formatTime, JOB_STATUS_LABELS, JOB_STATUS_COLORS, PRIORITY_COLORS } from '@/lib/utils'
+import InvoiceFormModal, { InvoiceFormData } from '@/components/InvoiceFormModal'
 
 interface Job {
   id: string
@@ -89,6 +90,8 @@ export default function JobDetailClient({ initialJob, employees, serviceTypes }:
   const [job, setJob] = useState(initialJob)
   const [isSaving, setIsSaving] = useState(false)
   const [activeTab, setActiveTab] = useState<'details' | 'notes' | 'time'>('details')
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
+  const [invoiceInitialData, setInvoiceInitialData] = useState<any>(null)
 
   const totalHours = job.timeEntries.reduce((sum, te) => sum + (te.hours || 0), 0)
   const totalLabor = totalHours * 85
@@ -146,6 +149,50 @@ export default function JobDetailClient({ initialJob, employees, serviceTypes }:
   function getPrevStatus() {
     const currentIndex = STATUS_FLOW.indexOf(job.status as any)
     return currentIndex > 0 ? STATUS_FLOW[currentIndex - 1] : null
+  }
+
+  const handleCreateInvoice = async () => {
+    try {
+      const res = await fetch('/api/invoices/from-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId: job.id }),
+      })
+      
+      if (res.ok) {
+        const data = await res.json()
+        setInvoiceInitialData(data)
+        setIsInvoiceModalOpen(true)
+      }
+    } catch (error) {
+      console.error('Failed to prepare invoice:', error)
+      alert('Failed to create invoice')
+    }
+  }
+
+  const handleInvoiceSubmit = async (data: InvoiceFormData) => {
+    const res = await fetch('/api/invoices', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    
+    if (!res.ok) {
+      throw new Error('Failed to create invoice')
+    }
+    
+    const newInvoice = await res.json()
+    setJob(prev => ({
+      ...prev,
+      invoices: [...prev.invoices, {
+        id: newInvoice.id,
+        invoiceNumber: newInvoice.invoiceNumber,
+        status: newInvoice.status,
+        total: newInvoice.total,
+        balance: newInvoice.balance,
+        issueDate: newInvoice.issueDate,
+      }],
+    }))
   }
 
   return (
@@ -499,6 +546,12 @@ export default function JobDetailClient({ initialJob, employees, serviceTypes }:
                 <span className="text-gray-600">Est. Labor</span>
                 <span className="font-semibold text-gray-900">${totalLabor.toFixed(2)}</span>
               </div>
+              <button
+                onClick={handleCreateInvoice}
+                className="w-full mt-3 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700"
+              >
+                + Create Invoice
+              </button>
               {job.invoices.length > 0 && (
                 <>
                   <div className="border-t border-gray-100 pt-3">
@@ -518,6 +571,20 @@ export default function JobDetailClient({ initialJob, employees, serviceTypes }:
           </div>
         </div>
       </div>
+
+      <InvoiceFormModal
+        isOpen={isInvoiceModalOpen}
+        onClose={() => setIsInvoiceModalOpen(false)}
+        onSubmit={handleInvoiceSubmit}
+        customers={[{
+          id: job.customer.id,
+          firstName: job.customer.firstName,
+          lastName: job.customer.lastName,
+          email: job.customer.email,
+          phone: job.customer.phone,
+        }]}
+        initialData={invoiceInitialData}
+      />
     </div>
   )
 }

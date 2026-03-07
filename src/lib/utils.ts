@@ -60,6 +60,15 @@ export const INVOICE_STATUS_COLORS: Record<string, string> = {
   VOID: 'bg-gray-100 text-gray-400',
 }
 
+export const INVOICE_STATUS_LABELS: Record<string, string> = {
+  DRAFT: 'Draft',
+  SENT: 'Sent',
+  PAID: 'Paid',
+  PARTIAL: 'Partial',
+  OVERDUE: 'Overdue',
+  VOID: 'Void',
+}
+
 export const PRIORITY_COLORS: Record<string, string> = {
   LOW: 'bg-gray-100 text-gray-600',
   NORMAL: 'bg-blue-100 text-blue-600',

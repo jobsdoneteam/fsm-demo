@@ -18,9 +18,10 @@ model Tenant {
   city      String?
   state     String?
   zip       String?
-  logoUrl   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  logoUrl        String?
+  defaultTaxRate Float   @default(0.08)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   users          User[]
   customers      Customer[]
