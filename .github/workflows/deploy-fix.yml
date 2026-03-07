@@ -66,6 +66,9 @@ jobs:
             echo "Generating Prisma client..."
             npx prisma generate
 
+            echo "Syncing database schema..."
+            npx prisma db push --accept-data-loss 2>&1 || true
+
             echo "Building Next.js..."
             npm run build
 
