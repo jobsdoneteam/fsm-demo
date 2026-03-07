@@ -45,6 +45,9 @@ jobs:
               cd $APP_DIR
             fi
 
+            # Fix .next directory permissions
+            sudo chown -R team:team $APP_DIR/.next 2>/dev/null || true
+
             echo "Installing dependencies..."
             npm install
 

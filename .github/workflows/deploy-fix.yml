@@ -1,0 +1,61 @@
+name: Deploy Fix (temporary)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            set -e
+
+            APP_DIR="/var/www/fsm-demo"
+            # Pull from dutchiono fork which has the auth fix
+            REPO_URL="https://github.com/dutchiono/fsm-demo.git"
+
+            echo "Starting deployment with auth fix..."
+
+            cd $APP_DIR
+
+            # Preserve local config before reset
+            cp .env /tmp/fsm-demo-env-backup 2>/dev/null || true
+            cp ecosystem.config.js /tmp/fsm-demo-ecosystem-backup 2>/dev/null || true
+
+            # Add dutchiono remote and fetch
+            git remote add dutchiono $REPO_URL 2>/dev/null || git remote set-url dutchiono $REPO_URL
+            git fetch dutchiono main
+
+            # Reset to dutchiono/main (has the auth basePath fix)
+            git reset --hard dutchiono/main
+
+            # Restore local config after reset
+            cp /tmp/fsm-demo-env-backup .env 2>/dev/null || true
+            cp /tmp/fsm-demo-ecosystem-backup ecosystem.config.js 2>/dev/null || true
+
+            # Fix .next directory permissions
+            sudo chown -R team:team $APP_DIR/.next 2>/dev/null || true
+
+            echo "Installing dependencies..."
+            npm install
+
+            echo "Generating Prisma client..."
+            npx prisma generate
+
+            echo "Building Next.js..."
+            npm run build
+
+            echo "Restarting pm2..."
+            pm2 restart fsm-demo
+
+            echo "Deployed at $(date)"
