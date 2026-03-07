@@ -1,29 +1,29 @@
 import { handlers } from '@/lib/auth'
 import { NextRequest } from 'next/server'
 
-const originalGET = handlers.GET
-const originalPOST = handlers.POST
+const NEXT_BASE_PATH = '/fsm-demo'
+
+function rewriteRequest(req: NextRequest): NextRequest {
+  // Next.js strips basePath from request.url, but Auth.js needs it
+  // to match its own basePath config. We add it back.
+  const url = new URL(req.url)
+
+  // Use forwarded headers when behind reverse proxy
+  const forwardedHost = req.headers.get('x-forwarded-host')
+  const forwardedProto = req.headers.get('x-forwarded-proto')
+  if (forwardedHost) url.host = forwardedHost
+  if (forwardedProto) url.protocol = forwardedProto + ':'
+
+  // Prepend the Next.js basePath back to the pathname
+  url.pathname = NEXT_BASE_PATH + url.pathname
+
+  return new NextRequest(url, req)
+}
 
 export async function GET(req: NextRequest) {
-  console.log('[AUTH DEBUG] GET url:', req.url)
-  console.log('[AUTH DEBUG] GET nextUrl.pathname:', req.nextUrl.pathname)
-  console.log('[AUTH DEBUG] GET nextUrl.basePath:', req.nextUrl.basePath)
-  console.log('[AUTH DEBUG] GET headers:', JSON.stringify({
-    host: req.headers.get('host'),
-    'x-forwarded-host': req.headers.get('x-forwarded-host'),
-    'x-forwarded-proto': req.headers.get('x-forwarded-proto'),
-  }))
-  return originalGET(req)
+  return handlers.GET(rewriteRequest(req))
 }
 
 export async function POST(req: NextRequest) {
-  console.log('[AUTH DEBUG] POST url:', req.url)
-  console.log('[AUTH DEBUG] POST nextUrl.pathname:', req.nextUrl.pathname)
-  console.log('[AUTH DEBUG] POST nextUrl.basePath:', req.nextUrl.basePath)
-  console.log('[AUTH DEBUG] POST headers:', JSON.stringify({
-    host: req.headers.get('host'),
-    'x-forwarded-host': req.headers.get('x-forwarded-host'),
-    'x-forwarded-proto': req.headers.get('x-forwarded-proto'),
-  }))
-  return originalPOST(req)
+  return handlers.POST(rewriteRequest(req))
 }

@@ -46,8 +46,11 @@ jobs:
             # Fix .env permissions
             sudo chown team:team .env 2>/dev/null || true
 
-            # Remove any AUTH_URL that includes /api/auth (wrong format) and ensure AUTH_SECRET
+            # Fix env vars for Auth.js v5 with basePath
+            # AUTH_URL must NOT be set (conflicts with basePath config)
             sed -i '/^AUTH_URL/d' .env 2>/dev/null || true
+            # NEXTAUTH_URL must be the bare domain (no /fsm-demo path)
+            sed -i 's|^NEXTAUTH_URL=.*|NEXTAUTH_URL="https://jobsdone.team"|' .env 2>/dev/null || true
             grep -q "^AUTH_SECRET" .env || echo 'AUTH_SECRET=fsm_demo_secret_key_12345' >> .env
 
             # Show current .env keys
