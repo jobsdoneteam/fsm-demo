@@ -30,13 +30,15 @@ jobs:
 
             if [ -d "$APP_DIR/.git" ]; then
               cd $APP_DIR
-              # Preserve .env before reset
+              # Preserve local config before reset
               cp .env /tmp/fsm-demo-env-backup 2>/dev/null || true
+              cp ecosystem.config.js /tmp/fsm-demo-ecosystem-backup 2>/dev/null || true
               git remote set-url origin $REPO_URL
               git fetch origin main
               git reset --hard origin/main
-              # Restore .env after reset
+              # Restore local config after reset
               cp /tmp/fsm-demo-env-backup .env 2>/dev/null || true
+              cp /tmp/fsm-demo-ecosystem-backup ecosystem.config.js 2>/dev/null || true
             else
               echo "Initial clone..."
               git clone $REPO_URL $APP_DIR
