@@ -58,6 +58,7 @@ jobs:
             npm run build
 
             echo "Restarting pm2..."
-            pm2 restart fsm-demo
+            pm2 delete fsm-demo 2>/dev/null || true
+            pm2 start ecosystem.config.js
 
             echo "Deployed at $(date)"
