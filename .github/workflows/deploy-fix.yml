@@ -43,13 +43,16 @@ jobs:
             cp /tmp/fsm-demo-env-backup .env 2>/dev/null || true
             cp /tmp/fsm-demo-ecosystem-backup ecosystem.config.js 2>/dev/null || true
 
+            # Fix .env permissions
+            sudo chown team:team .env 2>/dev/null || true
+
             # Ensure AUTH_URL and AUTH_SECRET are set (Auth.js v5 env vars)
             grep -q "^AUTH_URL" .env || echo 'AUTH_URL=https://jobsdone.team/fsm-demo/api/auth' >> .env
             grep -q "^AUTH_SECRET" .env || echo 'AUTH_SECRET=fsm_demo_secret_key_12345' >> .env
 
-            # Show current .env (redacted)
+            # Show current .env keys
             echo "=== .env keys ==="
-            grep -oP '^[A-Z_]+' .env || true
+            cut -d= -f1 .env || true
 
             # Fix .next directory permissions
             sudo chown -R team:team $APP_DIR/.next 2>/dev/null || true
