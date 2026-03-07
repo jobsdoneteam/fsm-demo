@@ -46,8 +46,8 @@ jobs:
             # Fix .env permissions
             sudo chown team:team .env 2>/dev/null || true
 
-            # Ensure AUTH_URL and AUTH_SECRET are set (Auth.js v5 env vars)
-            grep -q "^AUTH_URL" .env || echo 'AUTH_URL=https://jobsdone.team/fsm-demo/api/auth' >> .env
+            # Remove any AUTH_URL that includes /api/auth (wrong format) and ensure AUTH_SECRET
+            sed -i '/^AUTH_URL/d' .env 2>/dev/null || true
             grep -q "^AUTH_SECRET" .env || echo 'AUTH_SECRET=fsm_demo_secret_key_12345' >> .env
 
             # Show current .env keys
@@ -70,16 +70,18 @@ jobs:
             echo "=== ecosystem.config.js ==="
             cat ecosystem.config.js || true
 
-            # Check port availability
+            # Kill root's PM2 and any process on port 3002
+            echo "=== Killing root PM2 and freeing port 3002 ==="
+            sudo pm2 kill 2>/dev/null || true
+            sudo fuser -k 3002/tcp 2>/dev/null || true
+            pm2 kill 2>/dev/null || true
+            sleep 2
+
+            # Verify port is free
             echo "=== Port 3002 check ==="
             sudo lsof -i :3002 || echo "Port 3002 is free"
 
-            # Kill anything on port 3002
-            sudo fuser -k 3002/tcp 2>/dev/null || true
-            sleep 1
-
-            echo "Restarting pm2..."
-            pm2 delete fsm-demo 2>/dev/null || true
+            echo "Starting pm2..."
             pm2 start ecosystem.config.js
 
             # Wait for pm2 to settle
