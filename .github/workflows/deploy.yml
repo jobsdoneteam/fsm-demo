@@ -30,22 +30,35 @@ jobs:
 
             if [ -d "$APP_DIR/.git" ]; then
               cd $APP_DIR
+              # Preserve local config before reset
+              cp .env /tmp/fsm-demo-env-backup 2>/dev/null || true
+              cp ecosystem.config.js /tmp/fsm-demo-ecosystem-backup 2>/dev/null || true
               git remote set-url origin $REPO_URL
               git fetch origin main
               git reset --hard origin/main
+              # Restore local config after reset
+              cp /tmp/fsm-demo-env-backup .env 2>/dev/null || true
+              cp /tmp/fsm-demo-ecosystem-backup ecosystem.config.js 2>/dev/null || true
             else
               echo "Initial clone..."
               git clone $REPO_URL $APP_DIR
               cd $APP_DIR
             fi
 
+            # Fix .next directory permissions
+            sudo chown -R team:team $APP_DIR/.next 2>/dev/null || true
+
             echo "Installing dependencies..."
             npm install
+
+            echo "Generating Prisma client..."
+            npx prisma generate
 
             echo "Building Next.js..."
             npm run build
 
             echo "Restarting pm2..."
-            pm2 restart fsm-demo
+            pm2 delete fsm-demo 2>/dev/null || true
+            pm2 start ecosystem.config.js
 
             echo "Deployed at $(date)"

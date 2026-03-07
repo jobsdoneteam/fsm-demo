@@ -1,0 +1,111 @@
+name: Deploy Fix (temporary)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            set -e
+
+            APP_DIR="/var/www/fsm-demo"
+            # Pull from dutchiono fork which has the auth fix
+            REPO_URL="https://github.com/dutchiono/fsm-demo.git"
+
+            echo "Starting deployment with auth fix..."
+
+            cd $APP_DIR
+
+            # Preserve local config before reset
+            cp .env /tmp/fsm-demo-env-backup 2>/dev/null || true
+            cp ecosystem.config.js /tmp/fsm-demo-ecosystem-backup 2>/dev/null || true
+
+            # Add dutchiono remote and fetch
+            git remote add dutchiono $REPO_URL 2>/dev/null || git remote set-url dutchiono $REPO_URL
+            git fetch dutchiono main
+
+            # Reset to dutchiono/main (has the auth basePath fix)
+            git reset --hard dutchiono/main
+
+            # Restore local config after reset
+            cp /tmp/fsm-demo-env-backup .env 2>/dev/null || true
+            cp /tmp/fsm-demo-ecosystem-backup ecosystem.config.js 2>/dev/null || true
+
+            # Fix .env permissions
+            sudo chown team:team .env 2>/dev/null || true
+
+            # Fix env vars for Auth.js v5 with basePath
+            # AUTH_URL must NOT be set (conflicts with basePath config)
+            sed -i '/^AUTH_URL/d' .env 2>/dev/null || true
+            # NEXTAUTH_URL must be the bare domain (no /fsm-demo path)
+            sed -i 's|^NEXTAUTH_URL=.*|NEXTAUTH_URL="https://jobsdone.team"|' .env 2>/dev/null || true
+            grep -q "^AUTH_SECRET" .env || echo 'AUTH_SECRET=fsm_demo_secret_key_12345' >> .env
+
+            # Show current .env keys
+            echo "=== .env keys ==="
+            cut -d= -f1 .env || true
+
+            # Fix .next directory permissions
+            sudo chown -R team:team $APP_DIR/.next 2>/dev/null || true
+
+            echo "Installing dependencies..."
+            npm install
+
+            echo "Generating Prisma client..."
+            npx prisma generate
+
+            echo "Syncing database schema..."
+            npx prisma db push --accept-data-loss 2>&1 || true
+
+            echo "Building Next.js..."
+            npm run build
+
+            # Show ecosystem config
+            echo "=== ecosystem.config.js ==="
+            cat ecosystem.config.js || true
+
+            # Kill root's PM2 and any process on port 3002
+            echo "=== Killing root PM2 and freeing port 3002 ==="
+            sudo pm2 kill 2>/dev/null || true
+            sudo fuser -k 3002/tcp 2>/dev/null || true
+            pm2 kill 2>/dev/null || true
+            sleep 2
+
+            # Verify port is free
+            echo "=== Port 3002 check ==="
+            sudo lsof -i :3002 || echo "Port 3002 is free"
+
+            echo "Starting pm2..."
+            pm2 start ecosystem.config.js
+
+            # Wait for pm2 to settle
+            sleep 5
+
+            # Check pm2 status
+            echo "=== PM2 status ==="
+            pm2 status || true
+
+            # Test auth endpoint
+            echo "=== Testing auth endpoint ==="
+            curl -s -o /dev/null -w "csrf status: %{http_code}\n" http://127.0.0.1:3002/fsm-demo/api/auth/csrf || true
+
+            # Get detailed error logs
+            echo "=== PM2 error logs ==="
+            pm2 logs fsm-demo --err --nostream --lines 30 || true
+
+            echo "=== PM2 out logs ==="
+            pm2 logs fsm-demo --out --nostream --lines 10 || true
+
+            echo "Deployed at $(date)"

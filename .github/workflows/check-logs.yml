@@ -1,0 +1,26 @@
+name: Check Logs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check server logs
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            echo "=== PM2 status ==="
+            pm2 status || true
+            echo "=== PM2 error logs (last 50) ==="
+            pm2 logs fsm-demo --err --nostream --lines 50 2>/dev/null || true
+            echo "=== PM2 out logs (last 30) ==="
+            pm2 logs fsm-demo --out --nostream --lines 30 2>/dev/null || true
+            echo "=== .env keys ==="
+            cut -d= -f1 /var/www/fsm-demo/.env || true
+            echo "=== next.config.js ==="
+            cat /var/www/fsm-demo/next.config.js || true

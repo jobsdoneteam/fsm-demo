@@ -5,9 +5,31 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  basePath: '/fsm-demo/api/auth',
+  trustHost: true,
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
-  pages: { signIn: '/login' },
+  pages: { signIn: '/fsm-demo/login' },
+  cookies: {
+    csrfToken: {
+      name: 'authjs.csrf-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true,
+      },
+    },
+    callbackUrl: {
+      name: 'authjs.callback-url',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true,
+      },
+    },
+  },
   providers: [
     Credentials({
       name: 'credentials',
