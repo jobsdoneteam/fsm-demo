@@ -66,17 +66,38 @@ jobs:
             echo "Building Next.js..."
             npm run build
 
+            # Show ecosystem config
+            echo "=== ecosystem.config.js ==="
+            cat ecosystem.config.js || true
+
+            # Check port availability
+            echo "=== Port 3002 check ==="
+            sudo lsof -i :3002 || echo "Port 3002 is free"
+
+            # Kill anything on port 3002
+            sudo fuser -k 3002/tcp 2>/dev/null || true
+            sleep 1
+
             echo "Restarting pm2..."
             pm2 delete fsm-demo 2>/dev/null || true
             pm2 start ecosystem.config.js
 
-            # Wait for pm2 to settle and test auth endpoint
-            sleep 3
+            # Wait for pm2 to settle
+            sleep 5
+
+            # Check pm2 status
+            echo "=== PM2 status ==="
+            pm2 status || true
+
+            # Test auth endpoint
             echo "=== Testing auth endpoint ==="
             curl -s -o /dev/null -w "csrf status: %{http_code}\n" http://127.0.0.1:3002/fsm-demo/api/auth/csrf || true
-            curl -s -o /dev/null -w "providers status: %{http_code}\n" http://127.0.0.1:3002/fsm-demo/api/auth/providers || true
 
-            echo "=== PM2 logs (last 20 lines) ==="
-            pm2 logs fsm-demo --nostream --lines 20 || true
+            # Get detailed error logs
+            echo "=== PM2 error logs ==="
+            pm2 logs fsm-demo --err --nostream --lines 30 || true
+
+            echo "=== PM2 out logs ==="
+            pm2 logs fsm-demo --out --nostream --lines 10 || true
 
             echo "Deployed at $(date)"
